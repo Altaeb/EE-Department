@@ -4,7 +4,7 @@ from sqlalchemy import exc
 import json
 from flask_cors import CORS
 
-from database.models import db_drop_and_create_all, setup_db, Sheet, subject
+from database.models import db_drop_and_create_all, setup_db, Sheet, Subject
 from auth.auth import AuthError, requires_auth
 
 app = Flask(__name__)
@@ -17,7 +17,7 @@ db_drop_and_create_all()
 @requires_auth('get:sheets')
 def get_sheets(payload):
     selection = Sheet.query.order_by(Sheet.id).all()
-    sheets = [sheet.format() for sheet in selection] = [sheet.format() for sheet in selection]
+    sheets = [sheet.format() for sheet in selection]
     
     return jsonify({
         'success': True,
