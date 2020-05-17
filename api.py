@@ -5,7 +5,7 @@ import json
 from flask_cors import CORS
 
 from database.models import db_drop_and_create_all, setup_db, Sheet, subject
-#from auth.auth import AuthError, requires_auth
+from auth.auth import AuthError, requires_auth
 
 app = Flask(__name__)
 setup_db(app)
@@ -14,7 +14,8 @@ CORS(app)
 db_drop_and_create_all()
 
 @app.route('/sheets')
-def get_sheets():
+@requires_auth('get:sheets')
+def get_sheets(payload):
     selection = Sheet.query.order_by(Sheet.id).all()
     sheets = [sheet.format() for sheet in selection] = [sheet.format() for sheet in selection]
     
@@ -25,7 +26,8 @@ def get_sheets():
     })
 
 @app.route('/sheets/<int:sheet_id>', methods=['DELETE'])
-def delete_sheet(sheet_id):
+@requires_auth('delete:sheets')
+def delete_sheet(payload, sheet_id):
     sheet = Sheet.query.filter(Sheet.id == sheet_id).one_or_none()
 
     if sheet is None:
@@ -47,7 +49,8 @@ def delete_sheet(sheet_id):
         abort(422)
 
 @app.route('/sheets', methods=['POST'])
-def create_Sheet():
+@requires_auth('post:Sheets')
+def create_Sheet(payload):
     body = request.get_json()
     title = body.get('title', None)
     release_date = body.get('release_date', None)
@@ -73,7 +76,8 @@ def create_Sheet():
         abort(422)
 
 @app.route('/sheets/<int:Sheet_id>', methods=['PATCH'])
-def update_Sheet(Sheet_id):
+@requires_auth('patch:Sheets')
+def update_Sheet(payload, Sheet_id):
     Sheet = Sheet.query.filter(Sheet.id == Sheet_id).one_or_none()
     if Sheet is None:
         abort(404)
@@ -99,7 +103,8 @@ def update_Sheet(Sheet_id):
         abort(422)
 
 @app.route('/Subjects')
-def get_Subjects():
+@requires_auth('get:Subjects')
+def get_Subjects(payload):
     selection = Subject.query.order_by(Subject.id).all()
     Subjects = [Subject.format() for Subject in selection]
 
@@ -110,7 +115,8 @@ def get_Subjects():
     })
 
 @app.route('/Subjects/<int:Subject_id>', methods=['DELETE'])
-def delete_Subject(Subject_id):
+@requires_auth('delete:Subjects')
+def delete_Subject(payload, Subject_id):
     Subject = Subject.query.filter(Subject.id == Subject_id).one_or_none()
 
     if Subject is None:
@@ -132,7 +138,8 @@ def delete_Subject(Subject_id):
         abort(422)
 
 @app.route('/Subjects', methods=['POST'])
-def create_Subject():
+@requires_auth('post:Subjects')
+def create_Subject(payload):
     body = request.get_json()
     name = body.get('name', None)
     age = body.get('age', None)
@@ -160,7 +167,8 @@ def create_Subject():
         abort(422)
 
 @app.route('/Subjects/<int:Subject_id>', methods=['PATCH'])
-def update_Subject(Subject_id):
+@requires_auth('patch:Subjects')
+def update_Subject(payload, Subject_id):
     Subject = Subject.query.filter(Subject.id == Subject_id).one_or_none()
     if Subject is None:
         abort(404)
