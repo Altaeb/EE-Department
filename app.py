@@ -7,12 +7,12 @@ from flask_cors import CORS
 from database.models import setup_db, Sheet, Subject
 from auth.auth import AuthError, requires_auth
 
-
+# Test
 def create_app(test_config=None):
     app = Flask(__name__)
     setup_db(app)
     CORS(app)
-    
+
     # End points
     @app.route('/')
     def welcome():
