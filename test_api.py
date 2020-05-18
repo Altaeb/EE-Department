@@ -23,9 +23,7 @@ class CastingTestCase(unittest.TestCase):
 
     def setUp(self):
         self.client = self.api.test_client
-        self.database_filename = "database.db"
-        self.project_dir = os.path.dirname(os.path.abspath(__file__))
-        self.database_path = "sqlite:///{}".format(os.path.join(project_dir, database_filename))
+        self.database_path = 'postgresql://postgres:1111@localhost:5432/casting'
 
         self.header_assistant = {
             'Content-Type': 'application/json',
