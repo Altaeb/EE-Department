@@ -8,7 +8,7 @@ AUTH0_DOMAIN = 'altaeb.eu.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'EE-Department'
 
-# AuthError Exception
+
 
 class AuthError(Exception):
     def __init__(self, error, status_code):
@@ -122,4 +122,4 @@ def requires_auth(permission=''):
             check_permissions(permission, payload)
             return f(payload, *args, **kwargs)
         return wrapper
-    return requires_auth_decorator 
+    return requires_auth_decorator

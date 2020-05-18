@@ -4,8 +4,8 @@ import json
 from flask_sqlalchemy import SQLAlchemy
 from flask import jsonify
 
-from api import 
-from database.models import setup_db, db_drop_and_create_all, sheet, subject
+from app import create_app
+from database.models import setup_db, db_drop_and_create_all, Sheet, Subject
 
 # This test will delete all the rows in the db !! only use locally
 
@@ -22,9 +22,9 @@ producer = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjZLUlZGSWwySXpGY0psSjc0
 class CastingTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.client = self.api.test_client
+        self.app = create_app()
+        self.client = self.app.test_client
         self.database_path = 'postgresql://postgres:1111@localhost:5432/casting'
-
         self.header_assistant = {
             'Content-Type': 'application/json',
             'Authorization': assistant
@@ -38,7 +38,7 @@ class CastingTestCase(unittest.TestCase):
             'Authorization': producer
         }
         setup_db(self.app, self.database_path)
-
+    
     def tearDown(self):
         pass
 
@@ -64,14 +64,10 @@ class CastingTestCase(unittest.TestCase):
     def test_3_post_sheets(self):
         # Only producer can perform this function
         new_sheet = {
-            "title": "love actually",
-            "release_date": 20200428
+            "title":"love actually",
+            "release_date":20200428
         }
-        res = self.client().post(
-                    '/sheets',
-                    json=new_sheet,
-                    headers=self.header_producer
-                )
+        res = self.client().post('/sheets', json=new_sheet, headers=self.header_producer)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -80,15 +76,9 @@ class CastingTestCase(unittest.TestCase):
     def test_4_post_subjects(self):
         # Director and producer can perform this function
         new_subject = {
-            "name": "brad pitt",
-            "age": 45,
-            "gender": "male"
-        }
-        res = self.client().post(
-                    '/subjects',
-                    json=new_subject,
-                    headers=self.header_director
-                )
+            "name":"brad pitt",
+                    }
+        res = self.client().post('/subjects', json=new_subject, headers=self.header_director)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -97,14 +87,10 @@ class CastingTestCase(unittest.TestCase):
     def test_5_patch_sheets(self):
         # Director and producer can perform this function
         patch_sheet = {
-            "title": "love actually",
-            "release_date": 20200428
+            "title":"love actually",
+            "release_date":20190428
         }
-        res = self.client().patch(
-                    '/sheets/1',
-                    json=patch_sheet,
-                    headers=self.header_director
-                )
+        res = self.client().patch('/sheets/1', json=patch_sheet, headers=self.header_director)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -113,13 +99,10 @@ class CastingTestCase(unittest.TestCase):
     def test_6_patch_subjects(self):
         # Director and producer can perform this function
         patch_subject = {
-            "name": "electrical engineering",
+            "name":"brad pitt",
+
         }
-        res = self.client().patch(
-                    '/subjects/1',
-                    json=patch_subject,
-                    headers=self.header_director
-                )
+        res = self.client().patch('/subjects/1', json=patch_subject, headers=self.header_director)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
@@ -140,7 +123,6 @@ class CastingTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
