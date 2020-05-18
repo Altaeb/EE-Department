@@ -14,6 +14,10 @@ def create_app(test_config=None):
     CORS(app)
     
     # End points
+    @app.route('/')
+    def welcome():
+        return "welcome to EE-Department"
+
     @app.route('/sheets')
     @requires_auth('get:sheets')
     def get_sheets(payload):
@@ -227,3 +231,6 @@ def create_app(test_config=None):
     return app
 
 app = create_app()
+
+if __name__ == '__main__':
+    app.run()
