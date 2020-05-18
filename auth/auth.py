@@ -4,9 +4,9 @@ from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
 
-AUTH0_DOMAIN = 'altaeb.eu.auth0.com'
-ALGORITHMS = ['RS256']
-API_AUDIENCE = 'EE-Department'
+AUTH0_DOMAIN = os.environ['AUTH0_DOMAIN']
+API_AUDIENCE = os.environ['API_AUDIENCE']
+ALGORITHMS = os.environ['ALGORITHMS']
 
 
 
