@@ -8,226 +8,211 @@ from database.models import setup_db, Sheet, Subject
 from auth.auth import AuthError, requires_auth
 
 
+#----------------------------------------------------------------------------#
+#                                  App Setup
+#----------------------------------------------------------------------------#
 def create_app(test_config=None):
+    # create and configure the app
     app = Flask(__name__)
     setup_db(app)
     CORS(app)
-
-    # End points
+#----------------------------------------------------------------------------#
+#                                  Endpoints
+#----------------------------------------------------------------------------#
     @app.route('/')
     def welcome():
         return "welcome to EE-Department"
 
-    @app.route('/sheets')
+    @app.route('/sheets', methods=['GET'])
     @requires_auth('get:sheets')
     def get_sheets(payload):
-        selection = Sheet.query.order_by(Sheet.id).all()
-        sheets = [sheet.format() for sheet in selection]
+        sheets = Sheet.query.all()
 
-        return jsonify({
-            'success': True,
-            'sheets': sheets,
-            'totalSheets': len(Sheet.query.all())
-        })
-
-    @app.route('/sheets/<int:sheet_id>', methods=['DELETE'])
-    @requires_auth('delete:sheets')
-    def delete_sheet(payload, sheet_id):
-        sheet = Sheet.query.filter(Sheet.id == sheet_id).one_or_none()
-        
-        if sheet is None:
+        if len(sheets) == 0:
             abort(404)
 
-        try:
+        data = []
+        for sheet in sheets:
+            sheets_data = {
+                'title': sheet.title,
+                'release date': sheet.release_date.isoformat()
+                }
+            data.append(sheets_data)
+
+        result = {
+                  'success': True,
+                  'sheets': data
+                  }
+        return jsonify(result)
+
+
+    @app.route('/sheets/<int:id>', methods=['DELETE'])
+    @requires_auth('delete:sheets')
+    def delete_sheet(payload, id):
+        sheet = Sheet.query.filter_by(id=id).first()
+
+        if sheet is None:
+            abort(404)
+        else:
             sheet.delete()
-            selection = Sheet.query.order_by(Sheet.id).all()
-            sheets = [sheet.format() for sheet in selection]
-
-            return jsonify({
-                'success': True,
-                'deleted': int(sheet_id),
-                'sheets': sheets,
-                'totalSheets': len(Sheet.query.all())
-            })
-
-        except:
-            abort(422)
+        return jsonify({
+                      'success': True,
+                      'deleted': id
+                      })
 
     @app.route('/sheets', methods=['POST'])
     @requires_auth('post:sheets')
     def create_sheet(payload):
         body = request.get_json()
-        title = body.get('title', None)
-        release_date = body.get('release_date', None)
-
         try:
-            sheet = Sheet(
-                title=title,
-                release_date=release_date,
-                )
-
+            title, release_date = body['title'], body['release_date']
+            sheet = Sheet(title=title, release_date=release_date)
             sheet.insert()
-            selection = Sheet.query.order_by(Sheet.id).all()
-            sheets = [sheet.format() for sheet in selection]
-
+            sheet_data = {
+                'title': sheet.title,
+                'release_date': sheet.release_date.isoformat()
+                }
             return jsonify({
                 'success': True,
-                'created': sheet.id,
-                'sheets': sheets,
-                'totalSheets': len(Sheet.query.all())
-            })
-
+                'new sheet added': sheet_data
+                })
         except:
             abort(422)
 
-    @app.route('/sheets/<int:sheet_id>', methods=['PATCH'])
+    @app.route('/sheets/<int:id>', methods=['PATCH'])
     @requires_auth('patch:sheets')
-    def update_sheet(payload, sheet_id):
-        sheet = Sheet.query.filter(Sheet.id == sheet_id).one_or_none()
+    def update_sheet(payload, id):
+        sheet = Sheet.query.filter_by(id=id).first()
         if sheet is None:
             abort(404)
-
-        try:
+        else:
             body = request.get_json()
-            title = body.get('title', None)
-            release_date = body.get('release_date', None)
-
-            sheet.title = title
-            sheet.release_date = release_date
-            selection = Sheet.query.order_by(Sheet.id).all()
-            sheets = [sheet.format() for sheet in selection]
-
+            sheet.title = body['title']
+            sheet.release_date = body['release_date']
+            sheet.update()
             return jsonify({
                 'success': True,
-                'updated': sheet.id,
-                'sheets': sheets,
-                'totalSheets': len(Sheet.query.all())
-            })
+                'updated': id
+                })
 
-        except:
-            abort(422)
-
-    @app.route('/subjects')
+    @app.route('/subjects', methods=['GET'])
     @requires_auth('get:subjects')
     def get_subjects(payload):
-        selection = Subject.query.order_by(Subject.id).all()
-        subjects = [subject.format() for subject in selection]
+        subjects = Subject.query.all()
 
-        return jsonify({
-            'success': True,
-            'subjects': subjects,
-            'totalSubjects': len(Subject.query.all())
-        })
-
-    @app.route('/subjects/<int:subject_id>', methods=['DELETE'])
-    @requires_auth('delete:subjects')
-    def delete_subject(payload, subject_id):
-        subject = Subject.query.filter(Subject.id == subject_id).one_or_none()
-        
-        if subject is None:
+        if len(subjects) == 0:
             abort(404)
 
-        try:
+        data = []
+        for subject in subjects:
+            subjects_data = {
+                'name': subject.name,
+                }
+            data.append(subjects_data)
+
+        result = {
+              'success': True,
+              'subjects': data
+            }
+        return jsonify(result)
+
+    @app.route('/subjects/<int:id>', methods=['DELETE'])
+    @requires_auth('delete:subjects')
+    def delete_subject(payload, id):
+        subject = Subject.query.filter_by(id=id).first()
+
+        if subject is None:
+            abort(404)
+        else:
             subject.delete()
-            selection = Subject.query.order_by(Subject.id).all()
-            subjects = [subject.format() for subject in selection]
-
-            return jsonify({
-                'success': True,
-                'deleted': subject_id,
-                'subjects': subjects,
-                'totalSubjects': len(Subject.query.all())
-            })
-
-        except:
-            abort(422)
+        return jsonify({
+                      'success': True,
+                      'deleted': id
+                      })
 
     @app.route('/subjects', methods=['POST'])
     @requires_auth('post:subjects')
     def create_subject(payload):
         body = request.get_json()
-        name = body.get('name', None)
-        age = body.get('age', None)
-        gender = body.get('gender', None)
-
         try:
-            subject = Subject(
-                name=name,
-                age=age,
-                gender=gender
-                )
-
+            name = body['name']
+            subject = Subject(name=name)
             subject.insert()
-            selection = Subject.query.order_by(Subject.id).all()
-            subjects = [subject.format() for subject in selection]
-
+            subject_data = {
+                'name': subject.name,
+                }
             return jsonify({
                 'success': True,
-                'created': subject.id,
-                'subjects': subjects,
-                'totalSubjects': len(Subject.query.all())
-            })
-
+                'new subject added': subject_data
+                })
         except:
             abort(422)
 
-    @app.route('/subjects/<int:subject_id>', methods=['PATCH'])
+    @app.route('/subjects/<int:id>', methods=['PATCH'])
     @requires_auth('patch:subjects')
-    def update_subject(payload, subject_id):
-        subject = Subject.query.filter(Subject.id == subject_id).one_or_none()
+    def update_subject(payload, id):
+        subject = Subject.query.filter_by(id=id).first()
         if subject is None:
             abort(404)
-
-        try:
+        else:
             body = request.get_json()
-            name = body.get('name', None)
-            age = body.get('age', None)
-            gender = body.get('gender', None)
-
-            subject.name = name
-            subject.age = age
-            subject.gender = gender
-
-            selection = Subject.query.order_by(Subject.id).all()
-            subjects = [subject.format() for subject in selection]
-
+            subject.name = body['name']
+            subject.update()
             return jsonify({
                 'success': True,
-                'updated': subject.id,
-                'subjects': subjects,
-                'totalSubjects': len(Subject.query.all())
+                'updated': id
             })
 
-        except:
-            abort(422)
-
-    # Error Handling
+#----------------------------------------------------------------------------#
+#                                Error Handlers
+#----------------------------------------------------------------------------#
     @app.errorhandler(422)
     def unprocessable(error):
         return jsonify({
-                        "success": False,
-                        "error": 422,
-                        "message": "unprocessable"
-                        }), 422
+                      "success": False,
+                      "error": 422,
+                      "message": "Unprocessable"
+                      }), 422
 
     @app.errorhandler(404)
-    def not_found(error):
+    def notfound(error):
         return jsonify({
                         "success": False,
                         "error": 404,
-                        "message": "resource not found"
+                        "message": "Not Found"
                         }), 404
 
-
-    @app.errorhandler(AuthError)
-    def auth_error(error):
+    @app.errorhandler(405)
+    def notallowed(error):
         return jsonify({
                         "success": False,
-                        "error": AuthError,
-                        "message": "resource not found"
-                        }), AuthError
-        
+                        "error": 405,
+                        "message": "Method Not Allowed"
+                        }), 405
 
+    @app.errorhandler(500)
+    def internal_server_error(error):
+        return jsonify({
+          "success": False,
+          "error": 500,
+          "message": "Internal Server Error"
+          }), 500
+
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({
+            "success": False,
+            "error": 400,
+            "message": "Bad Request"
+            }), 400
+
+    @app.errorhandler(AuthError)
+    def auth_error(errors):
+        return jsonify({
+            "success": False,
+            "error": errors.status_code,
+            "message": errors.error['description']
+            }), errors.status_code
     return app
 
 app = create_app()
